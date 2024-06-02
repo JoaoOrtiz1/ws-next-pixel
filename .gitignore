@@ -1,0 +1,4 @@
+/node_modules
+.env
+/next-pixel-firebase-admin.json
+next-pixel-firebase-admin.json

@@ -1,0 +1,89 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model sys_carrinho {
+  car_co_carrinho      BigInt                 @id
+  usu_co_usuario       Decimal?               @db.Decimal
+  car_co_temp_id       String?                @db.VarChar(50)
+  car_dt_cadastro      DateTime               @default(now()) @db.Timestamp(6)
+  sys_usuario          sys_usuario?           @relation(fields: [usu_co_usuario], references: [usu_co_usuario], onDelete: NoAction, onUpdate: NoAction, map: "fk_usuario")
+  sys_carrinho_produto sys_carrinho_produto[]
+}
+
+model sys_carrinho_produto {
+  car_co_carrinho BigInt
+  prod_co_produto BigInt
+  prod_qt_produto Int?
+  sys_carrinho    sys_carrinho @relation(fields: [car_co_carrinho], references: [car_co_carrinho], onDelete: NoAction, onUpdate: NoAction, map: "fk_carrinho")
+  sys_produto     sys_produto  @relation(fields: [prod_co_produto], references: [prod_co_produto], onDelete: NoAction, onUpdate: NoAction, map: "fk_produto")
+
+  @@id([car_co_carrinho, prod_co_produto], map: "pk_carrinho_produtos")
+}
+
+model sys_endereco {
+  endc_co_endereco BigInt       @id
+  usu_co_usuario   Decimal?     @db.Decimal
+  endc_co_cep      BigInt?
+  endc_co_estado   String?      @db.VarChar(2)
+  endc_nu_cidade   String?      @db.VarChar(50)
+  endc_nu_numero   Int?         @db.SmallInt
+  endc_no_apelido  String?      @db.VarChar(60)
+  endc_no_bairro   String?      @db.VarChar(60)
+  endc_no_recebe   String?      @db.VarChar(60)
+  endc_no_rua      String?      @db.VarChar(60)
+  sys_usuario      sys_usuario? @relation(fields: [usu_co_usuario], references: [usu_co_usuario], onDelete: NoAction, onUpdate: NoAction, map: "fk_usuario")
+  sys_pedido       sys_pedido[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model sys_pedido {
+  ped_co_pedido      BigInt               @id
+  usu_co_usuario     Decimal?             @db.Decimal
+  ped_dt_pedido      DateTime?            @db.Timestamp(6)
+  ped_vl_pedido      Decimal?             @db.Decimal
+  endc_co_endereco   BigInt?
+  ped_in_status      String?              @db.Char(1)
+  sys_endereco       sys_endereco?        @relation(fields: [endc_co_endereco], references: [endc_co_endereco], onDelete: NoAction, onUpdate: NoAction)
+  sys_usuario        sys_usuario?         @relation(fields: [usu_co_usuario], references: [usu_co_usuario], onDelete: NoAction, onUpdate: NoAction)
+  sys_pedido_produto sys_pedido_produto[]
+}
+
+model sys_pedido_produto {
+  ped_co_pedido   BigInt
+  prod_co_produto BigInt
+  prod_qt_produto BigInt?
+  sys_pedido      sys_pedido  @relation(fields: [ped_co_pedido], references: [ped_co_pedido], onDelete: NoAction, onUpdate: NoAction)
+  sys_produto     sys_produto @relation(fields: [prod_co_produto], references: [prod_co_produto], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([ped_co_pedido, prod_co_produto])
+}
+
+model sys_produto {
+  prod_co_produto         BigInt                 @id
+  prod_no_produto         String?                @db.VarChar(100)
+  prod_tx_descricao       String?                @db.VarChar(2500)
+  prod_vl_preco           Decimal?               @db.Decimal
+  prod_no_estoque         Int?
+  prod_in_status          String?                @db.VarChar(1)
+  prod_path_url_thumbnail String?                @db.VarChar(20)
+  prod_url_3d             String?                @db.VarChar(500)
+  prod_dt_cadastro        DateTime?              @db.Timestamp(6)
+  sys_carrinho_produto    sys_carrinho_produto[]
+  sys_pedido_produto      sys_pedido_produto[]
+}
+
+model sys_usuario {
+  usu_co_usuario Decimal        @id @db.Decimal
+  usu_no_usuario String?        @db.VarChar(60)
+  usu_no_email   String?        @unique @db.VarChar(100)
+  usu_in_status  String?        @db.Char(1)
+  sys_carrinho   sys_carrinho[]
+  sys_endereco   sys_endereco[]
+  sys_pedido     sys_pedido[]
+}
